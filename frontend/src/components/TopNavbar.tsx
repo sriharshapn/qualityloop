@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Bell, Shield, Database, Sparkles, RefreshCw, Menu } from 'lucide-react';
+import { ThemeSwitcher } from './ThemeSwitcher';
 
 interface Props {
   activeTab: string;
@@ -69,6 +70,9 @@ export const TopNavbar: React.FC<Props> = ({
             className="w-full pl-8 pr-3 py-1.5 bg-[#F7F8FA] border border-[#E5E9F0] rounded-lg text-xs text-[#172033] placeholder-slate-400 focus:outline-hidden focus:ring-1 focus:ring-[#4169E1] focus:bg-white transition-all"
           />
         </div>
+
+        {/* Theme Selector */}
+        <ThemeSwitcher variant="compact" />
 
         {/* Hindsight Status Pill */}
         <button

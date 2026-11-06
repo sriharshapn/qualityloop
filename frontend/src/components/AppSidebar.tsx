@@ -8,8 +8,10 @@ import {
   ShieldCheck,
   User,
   Database,
-  X
+  X,
+  Palette
 } from 'lucide-react';
+import { useTheme, THEME_OPTIONS } from '../context/ThemeContext';
 
 interface Props {
   activeTab: string;
@@ -61,6 +63,14 @@ export const AppSidebar: React.FC<Props> = ({
       ]
     }
   ];
+
+  const { theme, setTheme, currentOption } = useTheme();
+
+  const cycleTheme = () => {
+    const currentIndex = THEME_OPTIONS.findIndex((o) => o.id === theme);
+    const nextIndex = (currentIndex + 1) % THEME_OPTIONS.length;
+    setTheme(THEME_OPTIONS[nextIndex].id);
+  };
 
   return (
     <>
@@ -121,7 +131,15 @@ export const AppSidebar: React.FC<Props> = ({
               {sec.items.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
-                return (
+                const { theme, setTheme, currentOption } = useTheme();
+
+  const cycleTheme = () => {
+    const currentIndex = THEME_OPTIONS.findIndex((o) => o.id === theme);
+    const nextIndex = (currentIndex + 1) % THEME_OPTIONS.length;
+    setTheme(THEME_OPTIONS[nextIndex].id);
+  };
+
+  return (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
@@ -173,7 +191,22 @@ export const AppSidebar: React.FC<Props> = ({
       </div>
 
       {/* Bottom Profile & Settings */}
-      <div className="p-3 border-t border-slate-800 space-y-2">
+      <div className="p-3 border-t border-slate-800 space-y-1.5">
+        <button
+          onClick={cycleTheme}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+          title="Click to cycle theme"
+        >
+          <div className="flex items-center gap-2.5">
+            <Palette className="w-4 h-4 text-slate-400" />
+            <span>Theme: {currentOption.name}</span>
+          </div>
+          <span
+            className="w-2.5 h-2.5 rounded-full border border-slate-600 shadow-2xs"
+            style={{ backgroundColor: currentOption.colorSwatch }}
+          />
+        </button>
+
         <button
           onClick={onOpenSettings}
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"

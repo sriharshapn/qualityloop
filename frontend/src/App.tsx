@@ -63,7 +63,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] text-[#172033] flex relative overflow-x-hidden">
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] flex relative overflow-x-hidden transition-colors duration-200">
       {/* Responsive Sidebar (Docked on desktop, off-canvas drawer on mobile/tablet) */}
       <AppSidebar
         activeTab={activeTab}

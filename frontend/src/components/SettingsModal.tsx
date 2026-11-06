@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Database, CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, Sparkles, Cpu, Lock, Server } from 'lucide-react';
+import { X, Database, CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, Sparkles, Cpu, Lock, Server, Palette } from 'lucide-react';
 import { api } from '../services/api';
 import { SettingsConfig } from '../types';
+import { ThemeSwitcher } from './ThemeSwitcher';
 
 interface Props {
   isOpen: boolean;
@@ -145,6 +146,18 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose, onSettingsSave
                 The agent utilizes structured schema generation to distinguish verified historical facts from new manufacturing hypotheses.
               </span>
             </div>
+          </div>
+
+          {/* Appearance & Themes */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <Palette className="w-4 h-4 text-indigo-600" />
+              <span>Display Theme & Appearance</span>
+            </label>
+            <p className="text-[11px] text-slate-500">
+              Customize the QualityLoop interface for your workstation lighting conditions:
+            </p>
+            <ThemeSwitcher variant="full" />
           </div>
 
           {/* Infrastructure Security Card */}
