@@ -80,8 +80,8 @@ class HindsightMemoryService:
             return {"status": "unconfigured", "message": status_msg, "bank_id": self.bank_id}
 
         try:
-            # Call official create_bank
-            response = client.create_bank(
+            # Call official async acreate_bank
+            response = await client.acreate_bank(
                 bank_id=self.bank_id,
                 name="QualityLoop Manufacturing Memory",
                 mission="Retain and recall manufacturing defect investigations, verified root causes, and corrective action outcomes to improve quality control decisions."
@@ -160,7 +160,7 @@ class HindsightMemoryService:
             }
 
         try:
-            response = client.retain(
+            response = await client.aretain(
                 bank_id=self.bank_id,
                 content=content,
                 metadata=metadata or {"incident_id": incident_id},
@@ -224,7 +224,7 @@ class HindsightMemoryService:
             return [], {"success": False, "status": "unconfigured", "message": msg}
 
         try:
-            recall_response = client.recall(
+            recall_response = await client.arecall(
                 bank_id=self.bank_id,
                 query=query,
                 budget="mid"
@@ -291,7 +291,7 @@ class HindsightMemoryService:
             return {"success": False, "status": "unconfigured", "message": msg}
 
         try:
-            reflect_response = client.reflect(
+            reflect_response = await client.areflect(
                 bank_id=self.bank_id,
                 query=query,
                 budget="mid"

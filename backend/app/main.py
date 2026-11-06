@@ -36,6 +36,11 @@ async def lifespan(app: FastAPI):
     
     yield
     logger.info("Shutting down QualityLoop backend.")
+    if hindsight_service._client:
+        try:
+            await hindsight_service._client.aclose()
+        except Exception:
+            pass
 
 app = FastAPI(
     title="QualityLoop API",
