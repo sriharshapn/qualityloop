@@ -4,13 +4,13 @@
   :root {
     color-scheme: light dark;
 
-    /* Base theme: Light */
-    --bg-main: #F7F8FA;
+    /* Base theme: Daylight Crisp */
+    --bg-main: #F8FAFC;
     --bg-card: #FFFFFF;
     --bg-card-subtle: #F1F5F9;
-    --border-main: #E5E9F0;
-    --text-main: #172033;
-    --text-muted: #687386;
+    --border-main: #E2E8F0;
+    --text-main: #0F172A;
+    --text-muted: #64748B;
     --header-bg: rgba(255, 255, 255, 0.9);
     --sidebar-bg: #101827;
 
@@ -22,7 +22,7 @@
     }
   }
 
-  /* Normal Black (OLED Midnight) */
+  /* Normal Black (OLED Midnight Black) */
   [data-theme="dark"], html.dark[data-theme="dark"] {
     color-scheme: dark;
     --bg-main: #080C14;
@@ -36,7 +36,7 @@
   }
 
   /* Titanium Slate */
-  [data-theme="slate"] {
+  [data-theme="slate"], html.dark[data-theme="slate"] {
     color-scheme: dark;
     --bg-main: #0F172A;
     --bg-card: #1E293B;
@@ -49,7 +49,7 @@
   }
 
   /* Cyber Cobalt */
-  [data-theme="cobalt"] {
+  [data-theme="cobalt"], html.dark[data-theme="cobalt"] {
     color-scheme: dark;
     --bg-main: #050A1C;
     --bg-card: #0B1433;
@@ -72,10 +72,8 @@
   }
 }
 
-/* Scoped Theme Transformations */
-[data-theme="dark"],
-[data-theme="slate"],
-[data-theme="cobalt"] {
+/* Scoped Theme Surface Styles for Dark Modes */
+html.dark {
   background-color: var(--bg-main);
   color: var(--text-main);
 
@@ -84,17 +82,10 @@
     color: var(--text-main) !important;
   }
 
-  /* Container background overrides */
-  .bg-\[\#F7F8FA\],
-  .bg-slate-50,
-  .bg-slate-100 {
-    background-color: var(--bg-card-subtle) !important;
-  }
-
-  /* Cards & Surface backgrounds */
+  /* Main cards and surface boxes */
   .bg-white {
     background-color: var(--bg-card) !important;
-    color: var(--text-main);
+    border-color: var(--border-main) !important;
   }
 
   /* Top Navbar */
@@ -104,46 +95,18 @@
     backdrop-filter: blur(12px);
   }
 
-  /* Border overrides */
-  .border-\[\#E5E9F0\],
-  .border-slate-200,
-  .border-slate-100 {
-    border-color: var(--border-main) !important;
-  }
-
-  /* Text overrides */
-  .text-\[\#172033\],
-  .text-slate-900,
-  .text-slate-800 {
-    color: var(--text-main) !important;
-  }
-
-  .text-\[\#687386\],
-  .text-slate-500,
-  .text-slate-600 {
-    color: var(--text-muted) !important;
-  }
-
-  .text-slate-700 {
-    color: #E2E8F0 !important;
-  }
-
-  /* Tables */
+  /* Default table headers and borders */
   thead, thead tr {
     background-color: var(--bg-card-subtle) !important;
     color: var(--text-muted) !important;
     border-color: var(--border-main) !important;
   }
 
-  tbody tr:hover {
-    background-color: rgba(99, 102, 241, 0.12) !important;
-  }
-
   tbody.divide-y > * {
     border-color: var(--border-main) !important;
   }
 
-  /* Form Controls */
+  /* Input fields, select dropdowns, textareas */
   input, select, textarea {
     background-color: var(--bg-card-subtle) !important;
     color: var(--text-main) !important;
@@ -154,12 +117,7 @@
     color: var(--text-muted) !important;
   }
 
-  /* Modal backdrops */
-  .bg-slate-900\/60, .bg-slate-900\/80 {
-    background-color: rgba(0, 0, 0, 0.75) !important;
-  }
-
-  /* Dropdown Popovers */
+  /* Popovers, modals, dropdowns */
   .shadow-xl, .shadow-2xl, .shadow-lg {
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.6) !important;
   }
