@@ -1,0 +1,29 @@
+# Python
+backend_venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+.env
+backend/.env
+
+# Node
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.npm
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
