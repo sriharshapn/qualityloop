@@ -2,6 +2,7 @@ import os
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -46,9 +47,9 @@ app = FastAPI(
     title="QualityLoop API",
     description="Self-Learning Manufacturing Quality Intelligence Agent powered by Hindsight Persistent Memory",
     version="2.0.0",
-    docs_url=None,
-    redoc_url=None,
-    openapi_url=None,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
     lifespan=lifespan
 )
 
@@ -69,6 +70,18 @@ app.include_router(memory_router)
 app.include_router(demo_router)
 app.include_router(settings_router)
 
+@app.get("/api/docs", include_in_schema=False)
+async def api_docs_redirect():
+    return RedirectResponse(url="/docs")
+
+@app.get("/api/redoc", include_in_schema=False)
+async def api_redoc_redirect():
+    return RedirectResponse(url="/redoc")
+
+@app.get("/api/openapi.json", include_in_schema=False)
+async def api_openapi_redirect():
+    return RedirectResponse(url="/openapi.json")
+
 @app.get("/")
 @app.get("/api")
 async def root():
@@ -77,6 +90,7 @@ async def root():
         "tagline": "Every defect teaches. Every experience improves.",
         "version": "2.0.0",
         "hindsight_bank": hindsight_service.bank_id,
+        "docs_url": "/docs",
         "status": "operational"
     }
 

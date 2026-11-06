@@ -60,9 +60,9 @@ export const DashboardPage: React.FC<Props> = ({ onNavigate, onOpenReport }) => 
 
   if (loading) {
     return (
-      <div className="p-8 space-y-6 animate-pulse">
-        <div className="h-10 bg-slate-200 rounded-lg w-1/3"></div>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 animate-pulse max-w-7xl mx-auto">
+        <div className="h-10 bg-slate-200 rounded-lg w-2/3 sm:w-1/3"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="h-28 bg-slate-200 rounded-xl"></div>
           ))}
@@ -76,26 +76,26 @@ export const DashboardPage: React.FC<Props> = ({ onNavigate, onOpenReport }) => 
   }
 
   return (
-    <div className="p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#172033] tracking-tight">Quality Overview</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#172033] tracking-tight">Quality Overview</h1>
           <p className="text-xs text-[#687386] mt-1">
             Monitor manufacturing quality, investigate defects and learn from operational experience.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button
             onClick={() => onNavigate('learning-demo')}
-            className="px-4 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg shadow-2xs transition-colors flex items-center gap-1.5"
+            className="flex-1 sm:flex-initial justify-center px-3.5 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg shadow-2xs transition-colors flex items-center gap-1.5"
           >
             <Sparkles className="w-3.5 h-3.5" />
             Watch Learning Demo
           </button>
           <button
             onClick={onOpenReport}
-            className="px-4 py-2 text-xs font-bold text-white bg-[#4169E1] hover:bg-blue-700 rounded-lg shadow-xs transition-colors flex items-center gap-1.5"
+            className="flex-1 sm:flex-initial justify-center px-4 py-2 text-xs font-bold text-white bg-[#4169E1] hover:bg-blue-700 rounded-lg shadow-xs transition-colors flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
             + Report Defect
@@ -104,7 +104,7 @@ export const DashboardPage: React.FC<Props> = ({ onNavigate, onOpenReport }) => 
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         <StatCard
           title="Total Incidents"
           value={stats?.total_incidents || 0}
@@ -227,8 +227,8 @@ export const DashboardPage: React.FC<Props> = ({ onNavigate, onOpenReport }) => 
             </button>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0">
+            <table className="w-full text-left text-xs min-w-[550px]">
               <thead className="bg-[#F7F8FA] text-slate-500 uppercase tracking-wider font-semibold border-y border-slate-200">
                 <tr>
                   <th className="py-2.5 px-3">ID</th>

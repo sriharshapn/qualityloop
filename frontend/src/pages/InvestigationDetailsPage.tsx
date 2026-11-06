@@ -126,7 +126,7 @@ export const InvestigationDetailsPage: React.FC<Props> = ({
 
   if (loading) {
     return (
-      <div className="p-8 max-w-7xl mx-auto space-y-6 animate-pulse">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 animate-pulse">
         <div className="h-8 bg-slate-200 rounded w-1/4"></div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="h-96 bg-slate-200 rounded-xl"></div>
@@ -138,7 +138,7 @@ export const InvestigationDetailsPage: React.FC<Props> = ({
 
   if (!incident) {
     return (
-      <div className="p-8 text-center text-xs text-slate-500">
+      <div className="p-4 sm:p-6 lg:p-8 text-center text-xs text-slate-500">
         Incident not found. <button onClick={onBack} className="text-indigo-600 underline">Go back</button>
       </div>
     );
@@ -148,30 +148,31 @@ export const InvestigationDetailsPage: React.FC<Props> = ({
   const hasMemories = recalledMemories.length > 0;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* Top Navigation & Status Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onBack}
-            className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors"
+            className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors shrink-0"
+            aria-label="Back to incidents list"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 shrink-0">
                 {incident.id}
               </span>
-              <h1 className="text-xl font-bold text-slate-900 truncate max-w-lg">{incident.title}</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-slate-900 truncate">{incident.title}</h1>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5 truncate">
               Reported on {new Date(incident.created_at).toLocaleString()} · Batch: <span className="font-mono font-medium">{incident.batch_number}</span>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center flex-wrap gap-2 sm:gap-3 shrink-0">
           <button
             onClick={() => loadData(true)}
             disabled={refreshing}

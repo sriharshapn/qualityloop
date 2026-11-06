@@ -139,23 +139,23 @@ export const ReportInvestigatePage: React.FC<Props> = ({ onIncidentCreated, onCa
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#172033] tracking-tight">Report Manufacturing Defect</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#172033] tracking-tight">Report Manufacturing Defect</h1>
           <p className="text-xs text-[#687386] mt-1">
             Submit a defect incident to trigger the QualityLoop investigation agent and persistent memory recall.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-[11px] font-bold text-slate-500">Quick Fill:</span>
           <button
             type="button"
             onClick={() => handleLoadSampleScenario('scratches')}
             className="px-2.5 py-1 text-xs font-semibold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded border border-indigo-200 transition-colors"
           >
-            Aluminium Housing (Demo Scenario)
+            Aluminium Housing (Demo)
           </button>
         </div>
       </div>
@@ -168,7 +168,7 @@ export const ReportInvestigatePage: React.FC<Props> = ({ onIncidentCreated, onCa
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-[#E5E9F0] shadow-xs p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-[#E5E9F0] shadow-xs p-4 sm:p-6 space-y-6">
         {/* Section 1: Product Information */}
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">

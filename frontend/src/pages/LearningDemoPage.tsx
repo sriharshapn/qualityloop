@@ -133,15 +133,15 @@ export const LearningDemoPage: React.FC = () => {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* Flagship Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <span className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-sm">
               <BrainCircuit className="w-5 h-5" />
             </span>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">See How QualityLoop Learns</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">See How QualityLoop Learns</h1>
           </div>
           <p className="text-xs text-slate-600 mt-1.5 max-w-2xl leading-relaxed">
             Watch how previous manufacturing defect investigations and verified corrective action outcomes stored in{' '}
@@ -154,7 +154,7 @@ export const LearningDemoPage: React.FC = () => {
           <button
             onClick={handleReset}
             disabled={loadingStep !== null}
-            className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-2xs transition-colors flex items-center gap-1.5"
+            className="w-full sm:w-auto px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-2xs transition-colors flex items-center justify-center gap-1.5"
           >
             <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
             Reset Demo State
@@ -438,8 +438,8 @@ export const LearningDemoPage: React.FC = () => {
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
           Demonstration Outcome Comparison (Before vs After Learning)
         </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
+        <div className="overflow-x-auto -mx-5 px-5 sm:mx-0 sm:px-0">
+          <table className="w-full text-xs text-left min-w-[580px]">
             <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-y border-slate-200">
               <tr>
                 <th className="py-2.5 px-3">Evaluation Dimension</th>

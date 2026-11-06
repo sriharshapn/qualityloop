@@ -14,6 +14,7 @@ export function App() {
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [hindsightConnected, setHindsightConnected] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -37,12 +38,14 @@ export function App() {
     } else {
       setActiveTab(tab);
     }
+    setIsSidebarOpen(false); // Auto close mobile drawer on navigation
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleIncidentCreated = (incidentId: string) => {
     setSelectedIncidentId(incidentId);
     setActiveTab('investigation-details');
+    setIsSidebarOpen(false);
     setNotification(`Incident ${incidentId} reported & investigated successfully!`);
     setTimeout(() => setNotification(null), 5000);
   };
@@ -53,23 +56,26 @@ export function App() {
       setNotification('Demo scenario reset to baseline before-learning state.');
       setTimeout(() => setNotification(null), 4000);
       setActiveTab('learning-demo');
+      setIsSidebarOpen(false);
     } catch (e: any) {
       alert(`Reset failed: ${e.message}`);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA] text-[#172033] flex">
-      {/* Fixed Sidebar */}
+    <div className="min-h-screen bg-[#F7F8FA] text-[#172033] flex relative overflow-x-hidden">
+      {/* Responsive Sidebar (Docked on desktop, off-canvas drawer on mobile/tablet) */}
       <AppSidebar
         activeTab={activeTab}
         setActiveTab={(tab) => handleNavigate(tab)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         hindsightConnected={hindsightConnected}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
-      {/* Main Content Area */}
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
+      {/* Main Content Area: dynamic margin offset only on large screens */}
+      <div className="flex-1 lg:ml-64 ml-0 flex flex-col min-h-screen w-full min-w-0 transition-all duration-200">
         {/* Top Navbar */}
         <TopNavbar
           activeTab={activeTab}
@@ -83,6 +89,7 @@ export function App() {
           onOpenSettings={() => setIsSettingsOpen(true)}
           hindsightConnected={hindsightConnected}
           onResetDemo={handleResetDemo}
+          onOpenSidebar={() => setIsSidebarOpen(true)}
         />
 
         {/* Global Toast Notification */}
