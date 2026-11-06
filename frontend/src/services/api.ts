@@ -145,7 +145,7 @@ export const api = {
     return res.json();
   },
 
-  updateSettings: async (data: Partial<SettingsConfig> & { hindsight_api_key?: string; anthropic_api_key?: string }): Promise<SettingsConfig> => {
+  updateSettings: async (data: { gemini_model?: string }): Promise<SettingsConfig> => {
     const res = await fetch(`${API_BASE}/settings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

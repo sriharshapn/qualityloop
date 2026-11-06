@@ -90,15 +90,11 @@ export interface DashboardStats {
 }
 
 export interface SettingsConfig {
-  hindsight_base_url: string;
   hindsight_bank_id: string;
-  hindsight_api_key_configured: boolean;
-  hindsight_api_key_masked: string;
-  gemini_api_key_configured?: boolean;
-  gemini_api_key_masked?: string;
+  hindsight_connected: boolean;
+  gemini_connected: boolean;
   gemini_model?: string;
-  anthropic_api_key_configured: boolean;
-  anthropic_api_key_masked: string;
-  status: string;
-  last_error?: string | null;
+  memory_status: string;
+  engine_mode: string;
+  storage_engine: string;
 }

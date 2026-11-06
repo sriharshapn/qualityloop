@@ -46,6 +46,9 @@ app = FastAPI(
     title="QualityLoop API",
     description="Self-Learning Manufacturing Quality Intelligence Agent powered by Hindsight Persistent Memory",
     version="2.0.0",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
     lifespan=lifespan
 )
 
@@ -74,7 +77,7 @@ async def root():
         "tagline": "Every defect teaches. Every experience improves.",
         "version": "2.0.0",
         "hindsight_bank": hindsight_service.bank_id,
-        "docs_url": "/docs"
+        "status": "operational"
     }
 
 @app.get("/health")
