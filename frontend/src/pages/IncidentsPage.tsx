@@ -78,15 +78,15 @@ export const IncidentsPage: React.FC<Props> = ({
       </div>
 
       {/* Filter Toolbar */}
-      <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-[#E5E9F0] shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3">
           {/* Status filter */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5">
-            <span className="text-[10px] sm:text-xs text-slate-500 font-medium">Status:</span>
+            <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-[#F7F8FA] text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
+              className="text-xs border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1.5 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
             >
               {statuses.map((s) => (
                 <option key={s} value={s}>{s}</option>
@@ -96,11 +96,11 @@ export const IncidentsPage: React.FC<Props> = ({
 
           {/* Category filter */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5">
-            <span className="text-[10px] sm:text-xs text-slate-500 font-medium">Category:</span>
+            <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">Category:</span>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-[#F7F8FA] text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
+              className="text-xs border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1.5 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
             >
               {categories.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -110,11 +110,11 @@ export const IncidentsPage: React.FC<Props> = ({
 
           {/* Severity filter */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5">
-            <span className="text-[10px] sm:text-xs text-slate-500 font-medium">Severity:</span>
+            <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">Severity:</span>
             <select
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value)}
-              className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-[#F7F8FA] text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
+              className="text-xs border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1.5 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
             >
               {severities.map((sev) => (
                 <option key={sev} value={sev}>{sev}</option>
@@ -131,32 +131,32 @@ export const IncidentsPage: React.FC<Props> = ({
             placeholder="Search by ID, title, product..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-md bg-[#F7F8FA] focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
           />
         </div>
       </div>
 
       {/* Incidents Table (Responsive: Mobile Cards + Tablet/Desktop Table) */}
-      <div className="bg-white rounded-xl border border-[#E5E9F0] shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-xs text-slate-500">Loading incident records...</div>
+          <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400">Loading incident records...</div>
         ) : incidents.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 text-xs">
+          <div className="p-12 text-center text-slate-500 dark:text-slate-400 text-xs">
             <Layers className="w-8 h-8 text-slate-400 mx-auto mb-2" />
             No matching incidents found. Adjust your filters or create a new defect report.
           </div>
         ) : (
           <>
             {/* Mobile Cards (Shown on mobile screens < md) */}
-            <div className="md:hidden divide-y divide-slate-100">
+            <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
               {incidents.map((inc) => (
                 <div
                   key={inc.id}
                   onClick={() => onNavigate('investigation-details', inc.id)}
-                  className="p-4 hover:bg-slate-50 active:bg-slate-100 cursor-pointer transition-colors space-y-2.5"
+                  className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 active:bg-slate-100 cursor-pointer transition-colors space-y-2.5"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                    <span className="font-mono text-xs font-bold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800">
                       {inc.id}
                     </span>
                     <div className="flex items-center gap-1.5">
@@ -165,14 +165,14 @@ export const IncidentsPage: React.FC<Props> = ({
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-900 text-xs">{inc.title}</h3>
-                    <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{inc.description}</p>
+                    <h3 className="font-bold text-slate-900 dark:text-slate-100 text-xs">{inc.title}</h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">{inc.description}</p>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-50">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-50 dark:border-slate-800">
                     <div>
-                      <span className="font-semibold text-slate-700">{inc.product_name}</span> · <span className="font-mono">{inc.batch_number}</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">{inc.product_name}</span> · <span className="font-mono">{inc.batch_number}</span>
                     </div>
-                    <span className="font-semibold text-indigo-600 flex items-center gap-0.5">
+                    <span className="font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-0.5">
                       Investigate <ChevronRight className="w-3 h-3" />
                     </span>
                   </div>
@@ -183,7 +183,7 @@ export const IncidentsPage: React.FC<Props> = ({
             {/* Desktop / Tablet Table (Shown on md+ screens) */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-xs min-w-[700px]">
-                <thead className="bg-[#F7F8FA] text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
+                <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4">Incident ID</th>
                     <th className="py-3 px-4">Title & Details</th>
@@ -196,25 +196,25 @@ export const IncidentsPage: React.FC<Props> = ({
                     <th className="py-3 px-4 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {incidents.map((inc) => (
                     <tr
                       key={inc.id}
                       onClick={() => onNavigate('investigation-details', inc.id)}
-                      className="hover:bg-slate-50/80 cursor-pointer transition-colors"
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
                     >
-                      <td className="py-3.5 px-4 font-mono font-bold text-indigo-700">
+                      <td className="py-3.5 px-4 font-mono font-bold text-indigo-700 dark:text-indigo-400">
                         {inc.id}
                       </td>
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-900 max-w-xs truncate">{inc.title}</div>
-                        <div className="text-[11px] text-slate-500 truncate max-w-xs">{inc.description}</div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100 max-w-xs truncate">{inc.title}</div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs">{inc.description}</div>
                       </td>
                       <td className="py-3.5 px-4">
-                        <div className="font-semibold text-slate-800">{inc.product_name}</div>
-                        <div className="font-mono text-[10px] text-slate-500">{inc.product_id}</div>
+                        <div className="font-semibold text-slate-800 dark:text-slate-200">{inc.product_name}</div>
+                        <div className="font-mono text-[10px] text-slate-500 dark:text-slate-400">{inc.product_id}</div>
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-medium text-slate-700">
+                      <td className="py-3.5 px-4 font-mono font-medium text-slate-700 dark:text-slate-300">
                         {inc.batch_number}
                       </td>
                       <td className="py-3.5 px-4">

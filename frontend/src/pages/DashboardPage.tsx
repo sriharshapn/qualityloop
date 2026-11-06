@@ -132,42 +132,42 @@ export const DashboardPage: React.FC<Props> = ({ onNavigate, onOpenReport }) => 
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 max-w-7xl mx-auto">
-      {/* 1. Hero Intelligence Executive Banner */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border border-indigo-500/20 text-white p-6 sm:p-8 shadow-xl">
+      {/* 1. Hero Intelligence Executive Banner (Dual-theme: Daylight vs Dark) */}
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 border border-indigo-200/90 dark:border-indigo-500/20 text-slate-900 dark:text-white p-6 sm:p-8 shadow-sm dark:shadow-xl transition-all duration-200">
         {/* Ambient background glows */}
-        <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute right-1/3 -top-20 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/15 border border-indigo-400/30 text-indigo-300 text-xs font-semibold backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100/70 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-400/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Autonomous Closed-Loop Quality Intelligence</span>
               <span className="text-indigo-400/60">·</span>
-              <span className="font-mono text-[11px] text-indigo-200">Gemini 3.5 & Hindsight Active</span>
+              <span className="font-mono text-[11px] text-indigo-600 dark:text-indigo-200">Gemini 3.5 & Hindsight Active</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
               Manufacturing Quality Control & Memory Agent
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               Every defect diagnosed is retained in the persistent memory bank. When similar manufacturing faults emerge, the agent recalls past root causes and verified fixes instantly.
             </p>
 
             {/* Quick Intelligence Metric Chips */}
             <div className="pt-2 flex flex-wrap items-center gap-3 text-xs">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-300">
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>RCA Acceleration: <strong className="text-white font-bold">3.4x Faster</strong></span>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-2xs">
+                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                <span>RCA Acceleration: <strong className="text-slate-900 dark:text-white font-bold">3.4x Faster</strong></span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-300">
-                <Database className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Memory Persistence: <strong className="text-white font-bold">Bank qualityloop</strong></span>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-2xs">
+                <Database className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                <span>Memory Persistence: <strong className="text-slate-900 dark:text-white font-bold">Bank qualityloop</strong></span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-300">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Fix Verification: <strong className="text-white font-bold">Feedback Guarded</strong></span>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-2xs">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Fix Verification: <strong className="text-slate-900 dark:text-white font-bold">Feedback Guarded</strong></span>
               </div>
             </div>
           </div>
@@ -176,7 +176,7 @@ export const DashboardPage: React.FC<Props> = ({ onNavigate, onOpenReport }) => 
           <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
             <button
               onClick={onOpenReport}
-              className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-500/25 hover:shadow-indigo-500/40 transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+              className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 hover:shadow-indigo-500/30 transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" />
               Report Defect
@@ -184,9 +184,9 @@ export const DashboardPage: React.FC<Props> = ({ onNavigate, onOpenReport }) => 
 
             <button
               onClick={() => onNavigate('learning-demo')}
-              className="px-5 py-2.5 bg-white/10 hover:bg-white/15 text-white border border-white/15 rounded-xl text-xs font-bold backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-center gap-2 shadow-sm"
+              className="px-5 py-2.5 bg-white dark:bg-white/10 hover:bg-slate-50 dark:hover:bg-white/15 text-indigo-700 dark:text-white border border-indigo-200 dark:border-white/15 rounded-xl text-xs font-bold shadow-2xs backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 flex items-center justify-center gap-2"
             >
-              <Sparkles className="w-4 h-4 text-indigo-300" />
+              <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-300" />
               Watch Learning Demo
             </button>
           </div>
