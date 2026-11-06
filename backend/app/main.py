@@ -62,6 +62,7 @@ app.include_router(demo_router)
 app.include_router(settings_router)
 
 @app.get("/")
+@app.get("/api")
 async def root():
     return {
         "app": "QualityLoop",
@@ -72,6 +73,7 @@ async def root():
     }
 
 @app.get("/health")
+@app.get("/api/health")
 async def health_check():
     status = await hindsight_service.get_service_status()
     return {
