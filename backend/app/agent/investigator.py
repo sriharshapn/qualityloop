@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Optional
 import aiosqlite
 import anthropic
 
+from app.database import get_db_path
 from app.memory.hindsight_service import hindsight_service
 from app.models.investigation import InvestigationResponse, HistoricalMemory, RecommendationItem
 
@@ -14,7 +15,7 @@ logger = logging.getLogger("qualityloop.agent")
 
 class QualityInvestigationAgent:
     def __init__(self):
-        self.db_path = os.getenv("SQLITE_DB_PATH", "qualityloop.db")
+        self.db_path = get_db_path()
         self.anthropic_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
 
     async def investigate_incident(

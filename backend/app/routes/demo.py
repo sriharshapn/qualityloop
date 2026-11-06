@@ -5,11 +5,12 @@ import json
 from datetime import datetime, timezone
 from typing import Dict, Any
 
+from app.database import get_db_path
 from app.memory.hindsight_service import hindsight_service
 from app.agent.investigator import agent_investigator
 
 router = APIRouter(prefix="/api/demo", tags=["demo"])
-DB_PATH = os.getenv("SQLITE_DB_PATH", "qualityloop.db")
+DB_PATH = get_db_path()
 
 @router.post("/reset")
 async def reset_demo():

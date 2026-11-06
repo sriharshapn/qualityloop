@@ -2,7 +2,9 @@ import os
 import aiosqlite
 from typing import Dict, Any, List
 
-DB_PATH = os.getenv("SQLITE_DB_PATH", "qualityloop.db")
+from app.database import get_db_path
+
+DB_PATH = get_db_path()
 
 async def get_dashboard_stats() -> Dict[str, Any]:
     async with aiosqlite.connect(DB_PATH) as db:

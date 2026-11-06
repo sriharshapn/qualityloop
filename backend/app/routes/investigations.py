@@ -4,11 +4,12 @@ import os
 import json
 from typing import Optional
 
+from app.database import get_db_path
 from app.models.investigation import InvestigationResponse, InvestigationTriggerRequest
 from app.agent.investigator import agent_investigator
 
 router = APIRouter(prefix="/api/investigations", tags=["investigations"])
-DB_PATH = os.getenv("SQLITE_DB_PATH", "qualityloop.db")
+DB_PATH = get_db_path()
 
 @router.post("/{incident_id}", response_model=InvestigationResponse)
 async def run_investigation(incident_id: str, payload: Optional[InvestigationTriggerRequest] = None):

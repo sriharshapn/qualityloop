@@ -3,11 +3,12 @@ import aiosqlite
 import os
 from typing import List, Optional
 
+from app.database import get_db_path
 from app.memory.hindsight_service import hindsight_service
 from app.models.memory_event import MemoryEventResponse, MemoryRetainRequest, MemoryRecallRequest, MemoryReflectRequest
 
 router = APIRouter(prefix="/api/memory", tags=["memory"])
-DB_PATH = os.getenv("SQLITE_DB_PATH", "qualityloop.db")
+DB_PATH = get_db_path()
 
 @router.get("/status")
 async def get_memory_status():

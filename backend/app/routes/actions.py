@@ -5,11 +5,12 @@ import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
 
+from app.database import get_db_path
 from app.models.action import ActionCreate, ActionFeedbackUpdate, ActionResponse
 from app.memory.hindsight_service import hindsight_service
 
 router = APIRouter(prefix="/api/actions", tags=["corrective_actions"])
-DB_PATH = os.getenv("SQLITE_DB_PATH", "qualityloop.db")
+DB_PATH = get_db_path()
 
 @router.get("/incident/{incident_id}", response_model=List[ActionResponse])
 async def list_actions_for_incident(incident_id: str):

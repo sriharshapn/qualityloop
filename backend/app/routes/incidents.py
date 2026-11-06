@@ -5,11 +5,12 @@ import os
 import uuid
 from datetime import datetime, timezone
 
+from app.database import get_db_path
 from app.models.incident import IncidentCreate, IncidentUpdate, IncidentResponse
 from app.services.analytics import get_dashboard_stats
 
 router = APIRouter(prefix="/api/incidents", tags=["incidents"])
-DB_PATH = os.getenv("SQLITE_DB_PATH", "qualityloop.db")
+DB_PATH = get_db_path()
 
 @router.get("", response_model=List[IncidentResponse])
 async def list_incidents(

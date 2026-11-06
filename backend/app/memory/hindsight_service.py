@@ -14,6 +14,8 @@ except ImportError:
     UnauthorizedException = Exception
     ApiException = Exception
 
+from app.database import get_db_path
+
 logger = logging.getLogger("qualityloop.hindsight")
 
 class HindsightMemoryService:
@@ -21,7 +23,7 @@ class HindsightMemoryService:
         self.base_url = os.getenv("HINDSIGHT_BASE_URL", "https://api.hindsight.vectorize.io")
         self.api_key = os.getenv("HINDSIGHT_API_KEY", "").strip()
         self.bank_id = os.getenv("HINDSIGHT_BANK_ID", "qualityloop")
-        self.db_path = os.getenv("SQLITE_DB_PATH", "qualityloop.db")
+        self.db_path = get_db_path()
         self._client: Optional[Hindsight] = None
         self._is_initialized = False
         self._last_error: Optional[str] = None

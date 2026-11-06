@@ -4,7 +4,14 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-DB_PATH = os.getenv("SQLITE_DB_PATH", "qualityloop.db")
+def get_db_path() -> str:
+    if os.getenv("SQLITE_DB_PATH"):
+        return os.getenv("SQLITE_DB_PATH")
+    if os.getenv("VERCEL"):
+        return "/tmp/qualityloop.db"
+    return "qualityloop.db"
+
+DB_PATH = get_db_path()
 
 async def get_db():
     db = await aiosqlite.connect(DB_PATH)
