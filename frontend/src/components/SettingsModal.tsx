@@ -14,6 +14,8 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose, onSettingsSave
   const [hindsightApiKey, setHindsightApiKey] = useState('');
   const [hindsightBaseUrl, setHindsightBaseUrl] = useState('https://api.hindsight.vectorize.io');
   const [hindsightBankId, setHindsightBankId] = useState('qualityloop');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [geminiModel, setGeminiModel] = useState('gemini-3.5-flash-lite');
   const [anthropicApiKey, setAnthropicApiKey] = useState('');
   const [saving, setSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -30,6 +32,7 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose, onSettingsSave
       setSettings(data);
       if (data.hindsight_base_url) setHindsightBaseUrl(data.hindsight_base_url);
       if (data.hindsight_bank_id) setHindsightBankId(data.hindsight_bank_id);
+      if (data.gemini_model) setGeminiModel(data.gemini_model);
     } catch (err: any) {
       setStatusMsg({ text: 'Failed to load settings', type: 'error' });
     }
@@ -42,10 +45,14 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose, onSettingsSave
     try {
       const updatePayload: any = {
         hindsight_base_url: hindsightBaseUrl,
-        hindsight_bank_id: hindsightBankId
+        hindsight_bank_id: hindsightBankId,
+        gemini_model: geminiModel
       };
       if (hindsightApiKey.trim()) {
         updatePayload.hindsight_api_key = hindsightApiKey.trim();
+      }
+      if (geminiApiKey.trim()) {
+        updatePayload.gemini_api_key = geminiApiKey.trim();
       }
       if (anthropicApiKey.trim()) {
         updatePayload.anthropic_api_key = anthropicApiKey.trim();
@@ -53,8 +60,9 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose, onSettingsSave
 
       const res = await api.updateSettings(updatePayload);
       setSettings(res);
-      setStatusMsg({ text: 'Settings updated successfully. Hindsight memory bank re-checked.', type: 'success' });
+      setStatusMsg({ text: 'Settings updated successfully. Hindsight & Gemini configurations refreshed.', type: 'success' });
       setHindsightApiKey('');
+      setGeminiApiKey('');
       setAnthropicApiKey('');
       if (onSettingsSaved) onSettingsSaved();
     } catch (err: any) {
@@ -175,9 +183,45 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose, onSettingsSave
               />
             </div>
 
+            {/* Gemini Section */}
+            <div className="pt-3 border-t border-slate-200">
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-bold text-slate-800 block">
+                  Google Gemini API Key (Primary LLM)
+                </label>
+                {settings?.gemini_api_key_configured && (
+                  <span className="font-mono text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold border border-emerald-200">
+                    Active ({settings.gemini_api_key_masked})
+                  </span>
+                )}
+              </div>
+              <input
+                type="password"
+                value={geminiApiKey}
+                onChange={(e) => setGeminiApiKey(e.target.value)}
+                placeholder="AQ... or AIzaSy... (leave blank to keep current)"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono text-xs text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-indigo-600"
+              />
+              <div className="mt-2 flex items-center gap-2">
+                <label className="font-semibold text-slate-700">Model:</label>
+                <select
+                  value={geminiModel}
+                  onChange={(e) => setGeminiModel(e.target.value)}
+                  className="px-2.5 py-1 border border-slate-300 rounded-lg font-mono text-xs text-slate-900 bg-white"
+                >
+                  <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Fast & High Throughput)</option>
+                  <option value="gemini-3.8-flash">gemini-3.8-flash (Balanced Multimodal)</option>
+                  <option value="gemini-4-argon">gemini-4-argon (Advanced Reasoning)</option>
+                </select>
+              </div>
+              <span className="text-[10px] text-slate-500 mt-1 block">
+                QualityLoop uses Google Gemini for defect root-cause analysis and memory grounding.
+              </span>
+            </div>
+
             <div className="pt-3 border-t border-slate-200">
               <label className="font-bold text-slate-800 block mb-1">
-                Anthropic Claude API Key (Optional)
+                Anthropic Claude API Key (Optional Fallback)
               </label>
               <input
                 type="password"

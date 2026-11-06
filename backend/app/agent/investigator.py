@@ -5,7 +5,17 @@ import uuid
 import re
 from typing import Dict, Any, List, Optional
 import aiosqlite
-import anthropic
+from pydantic import BaseModel, Field
+
+try:
+    from google import genai
+except ImportError:
+    genai = None
+
+try:
+    import anthropic
+except ImportError:
+    anthropic = None
 
 from app.database import get_db_path
 from app.memory.hindsight_service import hindsight_service
@@ -13,9 +23,26 @@ from app.models.investigation import InvestigationResponse, HistoricalMemory, Re
 
 logger = logging.getLogger("qualityloop.agent")
 
+class GeminiRecommendationItem(BaseModel):
+    id: str = Field(description="Recommendation identifier e.g. REC-01")
+    action: str = Field(description="Concrete actionable corrective or preventive action")
+    priority: str = Field(description="High, Medium, or Low")
+    target_stage: str = Field(description="Target production stage for action")
+    expected_impact: str = Field(description="Expected impact of this action")
+    grounded_in_memory: bool = Field(description="Whether this recommendation is directly grounded in historical memory")
+
+class GeminiInvestigationPayload(BaseModel):
+    summary: str = Field(description="Executive investigation summary highlighting defects and context")
+    possible_root_causes: List[str] = Field(description="List of verified causes or hypotheses")
+    recommendations: List[GeminiRecommendationItem] = Field(description="Actionable recommendations")
+    evidence: List[str] = Field(description="Supporting evidence and engineering rationale")
+    confidence_level: str = Field(description="High, Medium, or Low")
+
 class QualityInvestigationAgent:
     def __init__(self):
         self.db_path = get_db_path()
+        self.gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
         self.anthropic_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
 
     async def investigate_incident(
@@ -221,15 +248,106 @@ class QualityInvestigationAgent:
         """
         has_memory = len(memories) > 0
 
-        # Attempt Claude API call if key is present
-        if self.anthropic_key:
+        # 1. Primary: Gemini API
+        if self.gemini_key and genai is not None:
             try:
+                logger.info(f"Using Gemini LLM ({self.gemini_model}) for incident {incident.get('id')} investigation")
+                return await self._call_gemini_investigator(incident, memories)
+            except Exception as e:
+                logger.warning(f"Gemini LLM call failed: {e}. Falling back to secondary engine.")
+
+        # 2. Secondary: Anthropic Claude API
+        if self.anthropic_key and anthropic is not None:
+            try:
+                logger.info(f"Using Anthropic Claude for incident {incident.get('id')} investigation")
                 return await self._call_claude_investigator(incident, memories)
             except Exception as e:
                 logger.warning(f"Claude API call failed: {e}. Falling back to domain reasoning engine.")
 
-        # Robust built-in industrial reasoning engine
+        # 3. Robust built-in industrial reasoning engine
         return self._domain_reasoning_fallback(incident, memories)
+
+    async def _call_gemini_investigator(
+        self,
+        incident: Dict[str, Any],
+        memories: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        client = genai.Client(
+            api_key=self.gemini_key,
+            http_options={"timeout": 25000}
+        )
+
+        memory_prompt_str = ""
+        if memories:
+            memory_prompt_str = "RECALLED HISTORICAL EXPERIENCES FROM HINDSIGHT:\n"
+            for m in memories:
+                memory_prompt_str += (
+                    f"- Incident: {m.get('original_incident_id', 'N/A')}\n"
+                    f"  Past Defect: {m.get('previous_defect')}\n"
+                    f"  Verified Root Cause: {m.get('verified_root_cause')}\n"
+                    f"  Corrective Action: {m.get('corrective_action')}\n"
+                    f"  Outcome: {m.get('recorded_outcome')}\n\n"
+                )
+        else:
+            memory_prompt_str = "No prior historical experiences were found in Hindsight for this defect/product pattern."
+
+        system_instruction = (
+            "You are QualityLoop's Chief Manufacturing Quality AI Investigator.\n"
+            "You analyze manufacturing defects, recall verified past investigations from Hindsight, "
+            "and generate root-cause hypotheses and corrective action plans.\n"
+            "RULES:\n"
+            "1. Distinguish verified facts from hypotheses. When grounded in prior memory, explicitly mention it.\n"
+            "2. If Hindsight memory provides verified past root causes and actions, directly leverage them, "
+            "mark grounded_in_memory=True on corresponding recommendations, and explain how past learning shapes the decision.\n"
+            "3. If no historical experiences exist, produce thorough generic exploratory recommendations and clearly state "
+            "no prior memory was available.\n"
+            "4. Confidence level should be 'High' when supported by verified memory, and 'Medium' or 'Low' when hypothetical."
+        )
+
+        user_prompt = f"""Investigate this manufacturing incident:
+Incident ID: {incident['id']}
+Title: {incident['title']}
+Product: {incident['product_name']} (ID: {incident['product_id']})
+Batch: {incident['batch_number']}
+Category: {incident['defect_category']}
+Severity: {incident['severity']}
+Description: {incident['description']}
+Production Stage: {incident['production_stage']}
+Machine: {incident.get('machine') or 'Not specified'}
+Supplier: {incident.get('supplier') or 'Internal / Not specified'}
+Quantity Affected: {incident['quantity_affected']}
+
+{memory_prompt_str}
+
+Please generate the structured investigation report."""
+
+        response = await client.aio.models.generate_content(
+            model=self.gemini_model,
+            contents=user_prompt,
+            config={
+                "system_instruction": system_instruction,
+                "response_mime_type": "application/json",
+                "response_schema": GeminiInvestigationPayload,
+                "temperature": 0.2
+            }
+        )
+
+        data = json.loads(response.text)
+        recs = []
+        for r in data.get("recommendations", []):
+            if isinstance(r, dict):
+                recs.append(r)
+            elif hasattr(r, "model_dump"):
+                recs.append(r.model_dump())
+
+        return {
+            "summary": data.get("summary", ""),
+            "possible_root_causes": data.get("possible_root_causes", []),
+            "recommendations": recs,
+            "evidence": data.get("evidence", []),
+            "recalled_memories": memories,
+            "confidence_level": data.get("confidence_level", "High" if memories else "Medium")
+        }
 
     async def _call_claude_investigator(
         self,

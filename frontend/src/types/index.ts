@@ -94,6 +94,9 @@ export interface SettingsConfig {
   hindsight_bank_id: string;
   hindsight_api_key_configured: boolean;
   hindsight_api_key_masked: string;
+  gemini_api_key_configured?: boolean;
+  gemini_api_key_masked?: string;
+  gemini_model?: string;
   anthropic_api_key_configured: boolean;
   anthropic_api_key_masked: string;
   status: string;
