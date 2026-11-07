@@ -3,12 +3,14 @@ from typing import List, Optional
 import aiosqlite
 import os
 import uuid
+import logging
 from datetime import datetime, timezone
 
-from app.database import get_db_path
+from app.database import get_db_path, persist_entity, sync_from_cloud
 from app.models.incident import IncidentCreate, IncidentUpdate, IncidentResponse
 from app.services.analytics import get_dashboard_stats
 
+logger = logging.getLogger("qualityloop.incidents")
 router = APIRouter(prefix="/api/incidents", tags=["incidents"])
 DB_PATH = get_db_path()
 
@@ -19,27 +21,34 @@ async def list_incidents(
     severity: Optional[str] = None,
     search: Optional[str] = None
 ):
-    query = "SELECT * FROM incidents WHERE 1=1"
-    params = []
-
-    if status and status != "All":
-        query += " AND status = ?"
-        params.append(status)
-    if category and category != "All":
-        query += " AND defect_category = ?"
-        params.append(category)
-    if severity and severity != "All":
-        query += " AND severity = ?"
-        params.append(severity)
-    if search:
-        query += " AND (title LIKE ? OR product_name LIKE ? OR batch_number LIKE ? OR id LIKE ?)"
-        s = f"%{search}%"
-        params.extend([s, s, s, s])
-
-    query += " ORDER BY created_at DESC"
-
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
+
+        # Sync any newly persisted cloud incidents into local container
+        try:
+            await sync_from_cloud(db)
+        except Exception as e:
+            logger.debug(f"Cloud sync on list_incidents notice: {e}")
+
+        query = "SELECT * FROM incidents WHERE 1=1"
+        params = []
+
+        if status and status != "All":
+            query += " AND status = ?"
+            params.append(status)
+        if category and category != "All":
+            query += " AND defect_category = ?"
+            params.append(category)
+        if severity and severity != "All":
+            query += " AND severity = ?"
+            params.append(severity)
+        if search:
+            query += " AND (title LIKE ? OR product_name LIKE ? OR batch_number LIKE ? OR id LIKE ?)"
+            s = f"%{search}%"
+            params.extend([s, s, s, s])
+
+        query += " ORDER BY created_at DESC"
+
         cursor = await db.execute(query, params)
         rows = await cursor.fetchall()
         return [dict(r) for r in rows]
@@ -48,6 +57,13 @@ async def list_incidents(
 async def create_incident(data: IncidentCreate):
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
+
+        # Sync before ID generation to avoid ID collisions across containers
+        try:
+            await sync_from_cloud(db)
+        except Exception:
+            pass
+
         # Generate next QL ID
         cursor = await db.execute("SELECT id FROM incidents WHERE id LIKE 'QL-%' ORDER BY id DESC LIMIT 1")
         last_row = await cursor.fetchone()
@@ -76,8 +92,15 @@ async def create_incident(data: IncidentCreate):
         await db.commit()
 
         cursor = await db.execute("SELECT * FROM incidents WHERE id = ?", (new_id,))
-        created = await cursor.fetchone()
-        return dict(created)
+        created = dict(await cursor.fetchone())
+
+        # Persist to durable cloud storage for multi-container Vercel consistency
+        try:
+            await persist_entity("incident", new_id, created)
+        except Exception as e:
+            logger.warning(f"Notice: cloud persistence for incident {new_id}: {e}")
+
+        return created
 
 @router.get("/stats")
 async def dashboard_stats():
@@ -89,6 +112,16 @@ async def get_incident(incident_id: str):
         db.row_factory = aiosqlite.Row
         cursor = await db.execute("SELECT * FROM incidents WHERE id = ?", (incident_id,))
         row = await cursor.fetchone()
+
+        if not row:
+            # Multi-container check: attempt cloud hydration if created on another container
+            try:
+                await sync_from_cloud(db, target_incident_id=incident_id)
+                cursor = await db.execute("SELECT * FROM incidents WHERE id = ?", (incident_id,))
+                row = await cursor.fetchone()
+            except Exception as e:
+                logger.debug(f"Cloud sync on get_incident notice: {e}")
+
         if not row:
             raise HTTPException(status_code=404, detail="Incident not found")
         return dict(row)
@@ -127,4 +160,11 @@ async def update_incident(incident_id: str, data: IncidentUpdate):
         updated = await cursor.fetchone()
         if not updated:
             raise HTTPException(status_code=404, detail="Incident not found")
-        return dict(updated)
+        
+        updated_dict = dict(updated)
+        try:
+            await persist_entity("incident", incident_id, updated_dict)
+        except Exception:
+            pass
+
+        return updated_dict

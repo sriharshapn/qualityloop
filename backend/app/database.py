@@ -1,8 +1,12 @@
 import aiosqlite
 import os
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
+
+logger = logging.getLogger("qualityloop.database")
 
 def get_db_path() -> str:
     if os.getenv("SQLITE_DB_PATH"):
@@ -93,8 +97,133 @@ async def init_db():
             )
         """)
 
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS synced_docs (
+                doc_id TEXT PRIMARY KEY,
+                synced_at TEXT NOT NULL
+            )
+        """)
+
         await db.commit()
         await seed_initial_data_if_empty(db)
+        
+        # Hydrate any previously persisted records from cloud bank
+        try:
+            await sync_from_cloud(db)
+        except Exception as e:
+            logger.debug(f"Initial cloud sync notice: {e}")
+
+async def persist_entity(entity_type: str, entity_id: str, data: dict):
+    """
+    Persist an incident, investigation, or action to durable cloud memory bank.
+    Ensures multi-container consistency across Vercel serverless functions.
+    """
+    try:
+        from app.memory.hindsight_service import hindsight_service
+        content = f"[QUALITYLOOP_STORE_{entity_type.upper()}]\n{json.dumps(data)}"
+        await hindsight_service.retain(
+            incident_id=entity_id,
+            content=content,
+            metadata={"entity_type": entity_type, "incident_id": entity_id},
+            tags=["qualityloop_store", entity_type, entity_id]
+        )
+    except Exception as e:
+        logger.warning(f"Notice: cloud persistence for {entity_type} {entity_id}: {e}")
+
+async def sync_from_cloud(db: aiosqlite.Connection, target_incident_id: Optional[str] = None):
+    """
+    Restore persisted entities from Hindsight cloud documents into local SQLite.
+    Runs on container startup or when an incident is not found in local SQLite.
+    """
+    try:
+        from app.memory.hindsight_service import hindsight_service
+        client = hindsight_service.get_client()
+        if not client:
+            return
+
+        # Fetch recent documents from Hindsight
+        docs = await client.documents.list_documents(bank_id=hindsight_service.bank_id, limit=40)
+        items = getattr(docs, "items", []) or []
+
+        for doc in items:
+            tags = getattr(doc, "tags", []) or []
+            if "qualityloop_store" not in tags:
+                continue
+
+            doc_id = doc.id
+            cursor = await db.execute("SELECT doc_id FROM synced_docs WHERE doc_id = ?", (doc_id,))
+            if await cursor.fetchone() and not target_incident_id:
+                continue
+
+            # Fetch full document text
+            try:
+                full_doc = await client.documents.get_document(bank_id=hindsight_service.bank_id, document_id=doc_id)
+                text = getattr(full_doc, "original_text", "") or ""
+                if not text.startswith("[QUALITYLOOP_STORE_"):
+                    continue
+
+                _, json_str = text.split("\n", 1)
+                record = json.loads(json_str)
+
+                if "[QUALITYLOOP_STORE_INCIDENT]" in text:
+                    inc_id = record.get("id")
+                    if target_incident_id and inc_id != target_incident_id:
+                        continue
+                    await db.execute("""
+                        INSERT OR REPLACE INTO incidents (
+                            id, title, product_name, product_id, batch_number, defect_category,
+                            severity, description, production_stage, machine, supplier,
+                            quantity_affected, status, image_url, created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        record["id"], record["title"], record["product_name"], record["product_id"],
+                        record["batch_number"], record["defect_category"], record["severity"],
+                        record["description"], record["production_stage"], record.get("machine"),
+                        record.get("supplier"), record.get("quantity_affected", 1),
+                        record.get("status", "Open"), record.get("image_url"), record["created_at"]
+                    ))
+
+                elif "[QUALITYLOOP_STORE_INVESTIGATION]" in text:
+                    inc_id = record.get("incident_id")
+                    if target_incident_id and inc_id != target_incident_id:
+                        continue
+                    await db.execute("""
+                        INSERT OR REPLACE INTO investigations (
+                            id, incident_id, summary, possible_root_causes, recommendations,
+                            evidence, recalled_memories, confidence_level, created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        record["id"], record["incident_id"], record["summary"],
+                        json.dumps(record["possible_root_causes"]) if isinstance(record["possible_root_causes"], list) else record["possible_root_causes"],
+                        json.dumps(record["recommendations"]) if isinstance(record["recommendations"], list) else record["recommendations"],
+                        json.dumps(record["evidence"]) if isinstance(record["evidence"], list) else record["evidence"],
+                        json.dumps(record.get("recalled_memories", [])) if isinstance(record.get("recalled_memories"), list) else record.get("recalled_memories", "[]"),
+                        record["confidence_level"], record["created_at"]
+                    ))
+
+                elif "[QUALITYLOOP_STORE_ACTION]" in text:
+                    inc_id = record.get("incident_id")
+                    if target_incident_id and inc_id != target_incident_id:
+                        continue
+                    await db.execute("""
+                        INSERT OR REPLACE INTO corrective_actions (
+                            id, incident_id, action_description, status, outcome, feedback, verified_root_cause, created_at, completed_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        record["id"], record["incident_id"], record["action_description"],
+                        record.get("status", "Proposed"), record.get("outcome", "Pending verification"),
+                        record.get("feedback"), record.get("verified_root_cause"),
+                        record["created_at"], record.get("completed_at")
+                    ))
+
+                now_iso = datetime.now(timezone.utc).isoformat()
+                await db.execute("INSERT OR REPLACE INTO synced_docs (doc_id, synced_at) VALUES (?, ?)", (doc_id, now_iso))
+            except Exception as parse_err:
+                logger.debug(f"Skipping document {doc_id}: {parse_err}")
+
+        await db.commit()
+    except Exception as e:
+        logger.warning(f"Notice: cloud state sync: {e}")
 
 async def seed_initial_data_if_empty(db: aiosqlite.Connection):
     cursor = await db.execute("SELECT COUNT(*) FROM incidents")

@@ -68,6 +68,7 @@ export const ReportInvestigatePage: React.FC<Props> = ({ onIncidentCreated, onCa
     setSubmitting(true);
     setCurrentStep(0);
 
+    let createdId = '';
     try {
       // Step 1: Create incident in DB
       const created = await api.createIncident({
@@ -84,24 +85,32 @@ export const ReportInvestigatePage: React.FC<Props> = ({ onIncidentCreated, onCa
         quantity_affected: Number(formData.quantity_affected) || 1,
         image_url: formData.image_url || undefined
       });
-
-      // Animate investigation steps for high visual fidelity
-      setCurrentStep(1);
-      await new Promise(r => setTimeout(r, 600));
-
-      setCurrentStep(2);
-      // Step 2: Trigger backend agent investigation (which does Hindsight recall)
-      await api.runInvestigation(created.id, true);
-
-      setCurrentStep(3);
-      await new Promise(r => setTimeout(r, 500));
-
-      // Done -> navigate to details
-      onIncidentCreated(created.id);
+      createdId = created.id;
     } catch (err: any) {
       setError(err.message || 'Failed to submit incident');
       setSubmitting(false);
+      return;
     }
+
+    try {
+      // Animate investigation steps for high visual fidelity
+      setCurrentStep(1);
+      await new Promise(r => setTimeout(r, 500));
+
+      setCurrentStep(2);
+      // Step 2: Trigger backend agent investigation (which does Hindsight recall)
+      await api.runInvestigation(createdId, true);
+
+      setCurrentStep(3);
+      await new Promise(r => setTimeout(r, 400));
+    } catch (invErr: any) {
+      console.warn('Initial investigation trigger notice:', invErr);
+      // The incident record is safely created in DB. If investigation had a transient delay,
+      // it can be run or retried directly on the details page.
+    }
+
+    // Done -> navigate to details
+    onIncidentCreated(createdId);
   };
 
   const handleLoadSampleScenario = (scenario: 'scratches' | 'tolerance' | 'cracking') => {

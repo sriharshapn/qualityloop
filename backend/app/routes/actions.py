@@ -2,13 +2,15 @@ from fastapi import APIRouter, HTTPException
 import aiosqlite
 import os
 import uuid
+import logging
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from app.database import get_db_path
+from app.database import get_db_path, persist_entity, sync_from_cloud
 from app.models.action import ActionCreate, ActionFeedbackUpdate, ActionResponse
 from app.memory.hindsight_service import hindsight_service
 
+logger = logging.getLogger("qualityloop.actions")
 router = APIRouter(prefix="/api/actions", tags=["corrective_actions"])
 DB_PATH = get_db_path()
 
@@ -22,6 +24,19 @@ async def list_actions_for_incident(incident_id: str):
             ORDER BY created_at ASC
         """, (incident_id,))
         rows = await cursor.fetchall()
+        
+        if not rows:
+            try:
+                await sync_from_cloud(db, target_incident_id=incident_id)
+                cursor = await db.execute("""
+                    SELECT * FROM corrective_actions 
+                    WHERE incident_id = ? 
+                    ORDER BY created_at ASC
+                """, (incident_id,))
+                rows = await cursor.fetchall()
+            except Exception:
+                pass
+
         return [dict(r) for r in rows]
 
 @router.post("", response_model=ActionResponse)
@@ -42,8 +57,14 @@ async def create_action(data: ActionCreate):
         await db.commit()
 
         cursor = await db.execute("SELECT * FROM corrective_actions WHERE id = ?", (action_id,))
-        created = await cursor.fetchone()
-        return dict(created)
+        created = dict(await cursor.fetchone())
+        
+        try:
+            await persist_entity("action", data.incident_id, created)
+        except Exception:
+            pass
+
+        return created
 
 @router.patch("/{action_id}", response_model=ActionResponse)
 async def update_action(action_id: str, data: ActionFeedbackUpdate):
@@ -109,9 +130,20 @@ Engineering Notes: {new_feedback or 'Outcome verified in post-implementation ins
 
                 # Mark incident resolved if outcome is verified
                 await db.execute("UPDATE incidents SET status = 'Resolved' WHERE id = ?", (inc_dict["id"],))
+                try:
+                    inc_dict["status"] = "Resolved"
+                    await persist_entity("incident", inc_dict["id"], inc_dict)
+                except Exception:
+                    pass
 
         await db.commit()
 
         cursor = await db.execute("SELECT * FROM corrective_actions WHERE id = ?", (action_id,))
         updated = await cursor.fetchone()
-        return dict(updated)
+        updated_dict = dict(updated)
+        try:
+            await persist_entity("action", current["incident_id"], updated_dict)
+        except Exception:
+            pass
+
+        return updated_dict

@@ -55,24 +55,49 @@ export const InvestigationDetailsPage: React.FC<Props> = ({
       if (forceRefresh) setRefreshing(true);
       else setLoading(true);
 
-      const [inc, inv, acts] = await Promise.all([
-        api.getIncident(incidentId),
-        forceRefresh ? api.runInvestigation(incidentId, true) : api.getInvestigation(incidentId),
-        api.getActions(incidentId)
-      ]);
+      // Step 1: Resilient incident retrieval (retry once after short pause in case of container propagation)
+      let inc: Incident | null = null;
+      try {
+        inc = await api.getIncident(incidentId);
+      } catch (err1) {
+        await new Promise(r => setTimeout(r, 600));
+        try {
+          inc = await api.getIncident(incidentId);
+        } catch (err2) {
+          console.warn(`Incident ${incidentId} not found after retry:`, err2);
+        }
+      }
 
-      setIncident(inc);
-      setInvestigation(inv);
-      setActions(acts);
+      if (inc) {
+        setIncident(inc);
+      }
 
-      // Pre-fill outcome form if action exists
-      if (acts.length > 0) {
-        setSelectedActionId(acts[0].id);
-        if (acts[0].verified_root_cause) setVerifiedCauseVal(acts[0].verified_root_cause);
-        if (acts[0].feedback) setFeedbackVal(acts[0].feedback);
+      // Step 2: Fetch investigation and corrective actions in parallel without blocking each other
+      const invPromise = forceRefresh
+        ? api.runInvestigation(incidentId, true)
+        : api.getInvestigation(incidentId);
+      const actsPromise = api.getActions(incidentId);
+
+      const [invResult, actsResult] = await Promise.allSettled([invPromise, actsPromise]);
+
+      if (invResult.status === 'fulfilled') {
+        setInvestigation(invResult.value);
+      } else {
+        console.warn('Investigation load notice:', invResult.reason);
+      }
+
+      if (actsResult.status === 'fulfilled') {
+        const acts = actsResult.value;
+        setActions(acts);
+        // Pre-fill outcome form if action exists
+        if (acts.length > 0) {
+          setSelectedActionId(acts[0].id);
+          if (acts[0].verified_root_cause) setVerifiedCauseVal(acts[0].verified_root_cause);
+          if (acts[0].feedback) setFeedbackVal(acts[0].feedback);
+        }
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error loading incident details:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -400,9 +425,30 @@ export const InvestigationDetailsPage: React.FC<Props> = ({
               </div>
             </div>
 
-            <div className="text-xs text-slate-700 bg-slate-50/70 p-3.5 rounded-lg border border-slate-200 leading-relaxed font-medium">
-              {investigation?.summary}
-            </div>
+            {!investigation ? (
+              <div className="p-4 rounded-xl border border-indigo-200 bg-indigo-50/50 text-xs text-indigo-950 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span className="font-semibold">AI Agent Investigation Ready to Run</span>
+                </div>
+                <p className="text-slate-600">
+                  This incident is safely saved. Trigger the agent now to recall past manufacturing resolutions from Hindsight persistent memory and formulate root-cause hypotheses.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => loadData(true)}
+                  disabled={refreshing}
+                  className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition-colors flex items-center gap-2 text-xs shadow-xs"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                  {refreshing ? 'Analyzing with Hindsight...' : 'Run Investigation Now'}
+                </button>
+              </div>
+            ) : (
+              <div className="text-xs text-slate-700 bg-slate-50/70 p-3.5 rounded-lg border border-slate-200 leading-relaxed font-medium">
+                {investigation.summary}
+              </div>
+            )}
 
             {/* Historical Experience Card (Prominent section per PRD) */}
             <div className="pt-2">

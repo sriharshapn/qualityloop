@@ -23,7 +23,7 @@ async def get_settings():
         "gemini_model": agent_investigator.gemini_model or "gemini-3.5-flash-lite",
         "memory_status": hindsight_service._status,
         "engine_mode": "Enterprise Managed",
-        "storage_engine": "SQLite (Dynamic Resolution)"
+        "storage_engine": "SQLite + Hindsight Cloud Persistence"
     }
 
 @router.post("")

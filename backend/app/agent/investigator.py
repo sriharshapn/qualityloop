@@ -3,6 +3,8 @@ import json
 import logging
 import uuid
 import re
+import asyncio
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 import aiosqlite
 from pydantic import BaseModel, Field
@@ -99,12 +101,13 @@ class QualityInvestigationAgent:
 
         # 4. Save to Database
         inv_id = f"INV-{incident_id}-{uuid.uuid4().hex[:6].upper()}"
+        created_at_iso = datetime.now(timezone.utc).isoformat()
         async with aiosqlite.connect(self.db_path) as db:
             await db.execute("""
                 INSERT OR REPLACE INTO investigations (
                     id, incident_id, summary, possible_root_causes, recommendations,
                     evidence, recalled_memories, confidence_level, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 inv_id,
                 incident_id,
@@ -113,7 +116,8 @@ class QualityInvestigationAgent:
                 json.dumps(investigation_data["recommendations"]),
                 json.dumps(investigation_data["evidence"]),
                 json.dumps(investigation_data["recalled_memories"]),
-                investigation_data["confidence_level"]
+                investigation_data["confidence_level"],
+                created_at_iso
             ))
 
             # Auto-create proposed corrective actions for engineering review
@@ -124,8 +128,8 @@ class QualityInvestigationAgent:
                     await db.execute("""
                         INSERT INTO corrective_actions (
                             id, incident_id, action_description, status, outcome, feedback, verified_root_cause, created_at
-                        ) VALUES (?, ?, ?, 'Proposed', 'Pending verification', NULL, NULL, datetime('now'))
-                    """, (action_id, incident_id, rec["action"]))
+                        ) VALUES (?, ?, ?, 'Proposed', 'Pending verification', NULL, NULL, ?)
+                    """, (action_id, incident_id, rec["action"], created_at_iso))
 
             # Update incident status to 'Investigating' or 'Action Required'
             await db.execute(
@@ -136,6 +140,15 @@ class QualityInvestigationAgent:
 
         investigation_data["id"] = inv_id
         investigation_data["incident_id"] = incident_id
+        investigation_data["created_at"] = created_at_iso
+
+        # Sync investigation to cloud store if available
+        try:
+            from app.database import persist_entity
+            await persist_entity("investigation", incident_id, investigation_data)
+        except Exception as e:
+            logger.warning(f"Notice: cloud persistence for investigation {inv_id}: {e}")
+
         return investigation_data
 
     async def _find_local_memory_candidates(self, incident: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -321,16 +334,35 @@ Quantity Affected: {incident['quantity_affected']}
 
 Please generate the structured investigation report."""
 
-        response = await client.aio.models.generate_content(
-            model=self.gemini_model,
-            contents=user_prompt,
-            config={
-                "system_instruction": system_instruction,
-                "response_mime_type": "application/json",
-                "response_schema": GeminiInvestigationPayload,
-                "temperature": 0.2
-            }
-        )
+        # Call Gemini with bounded exponential backoff retries for 503 / 429 / transient availability issues
+        max_retries = 3
+        backoff = 1.0
+        response = None
+        for attempt in range(max_retries):
+            try:
+                response = await client.aio.models.generate_content(
+                    model=self.gemini_model,
+                    contents=user_prompt,
+                    config={
+                        "system_instruction": system_instruction,
+                        "response_mime_type": "application/json",
+                        "response_schema": GeminiInvestigationPayload,
+                        "temperature": 0.2
+                    }
+                )
+                break
+            except Exception as e:
+                err_str = str(e)
+                is_transient = any(code in err_str for code in ["503", "429", "RESOURCE_EXHAUSTED", "UNAVAILABLE", "Overloaded", "temporarily unavailable"])
+                if is_transient and attempt < max_retries - 1:
+                    logger.warning(
+                        f"Gemini API transient error ({e}), retrying in {backoff:.1f}s (attempt {attempt+1}/{max_retries})..."
+                    )
+                    await asyncio.sleep(backoff)
+                    backoff *= 2
+                else:
+                    logger.warning(f"Gemini investigation call error after {attempt+1} attempt(s): {e}")
+                    raise
 
         data = json.loads(response.text)
         recs = []
@@ -411,13 +443,13 @@ Quantity Affected: {incident['quantity_affected']}
 
 Please generate the structured investigation report in JSON format."""
 
-        response = await client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=2048,
-            temperature=0.2,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}]
-        )
+        create_kwargs = {
+            "model": "claude-3-5-sonnet-20241022",
+            "max_tokens": 2048,
+            "system": system_prompt,
+            "messages": [{"role": "user", "content": user_prompt}]
+        }
+        response = await client.messages.create(**create_kwargs)
 
         content_text = response.content[0].text
         # Clean JSON markdown fences if present

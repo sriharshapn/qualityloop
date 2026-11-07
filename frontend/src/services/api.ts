@@ -37,7 +37,10 @@ export const api = {
 
   getIncident: async (id: string): Promise<Incident> => {
     const res = await fetch(`${API_BASE}/incidents/${id}`);
-    if (!res.ok) throw new Error(`Failed to fetch incident ${id}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.detail || `Failed to fetch incident ${id}`);
+    }
     return res.json();
   },
 
@@ -47,14 +50,20 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error('Failed to create incident');
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.detail || 'Failed to create incident');
+    }
     return res.json();
   },
 
   // Investigations
   getInvestigation: async (incidentId: string): Promise<Investigation> => {
     const res = await fetch(`${API_BASE}/investigations/${incidentId}`);
-    if (!res.ok) throw new Error(`Failed to fetch investigation for ${incidentId}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.detail || `Failed to fetch investigation for ${incidentId}`);
+    }
     return res.json();
   },
 
@@ -64,7 +73,10 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ force_refresh: forceRefresh })
     });
-    if (!res.ok) throw new Error(`Failed to run investigation for ${incidentId}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.detail || `Failed to run investigation for ${incidentId}`);
+    }
     return res.json();
   },
 
